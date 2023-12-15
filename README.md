@@ -20,3 +20,4 @@
 - [ ] Extract user agents (Maybe???)
 - [ ] IoC enrichment
 - [ ] Second, interactive mode, prompt CLI
+- [ ] Proper Async implementation

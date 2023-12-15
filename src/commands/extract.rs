@@ -32,7 +32,16 @@ pub async fn extract_artifacts_from_url(
     let string_response: String = req_client.fetch(url).await?;
     let document = select::document::Document::from(string_response.as_str());
     let selectors =
-        select::predicate::Or(select::predicate::Name("p"), select::predicate::Name("a"));
+        select::predicate::Or(
+            select::predicate::Or(
+                select::predicate::Name("p"),
+                select::predicate::Name("a")
+            ),
+            select::predicate::Or(
+                select::predicate::Name("li"),
+                select::predicate::Name("ol")
+            )
+        );
 
     let scraped_html = document
         .find(selectors)
@@ -68,12 +77,13 @@ pub async fn extract_artifacts_from_url_list_file(
     let urls = BufReader::new(std::fs::File::open(file_path)?)
         .lines()
         .into_iter()
-        .filter_map(|res| res.ok());
+        .filter_map(|res| res.ok())
+        .filter(|line| !line.is_empty());
 
     let mut artifacts_extracted_from_file: Vec<UrlListExtractResult> = Vec::new();
 
     for url in urls {
-        let extracted_artifacts = extract_artifacts_from_url(&url, artifacts.clone(), req_client)
+        let extracted_artifacts = extract_artifacts_from_url(url.as_str(), artifacts.clone(), req_client)
             .await?
             .into_iter()
             .filter(|extract_result| !extract_result.matches.is_empty())
